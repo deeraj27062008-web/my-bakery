@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order — FreshBakes Bakery</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="Order">
+
+<header id="site-header"></header>
+
+<section class="hero-sm">
+  <div class="container"><h1>Your Order</h1><p>Review your cart, choose payment, and confirm on WhatsApp.</p></div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="grid" style="grid-template-columns: 1.4fr 1fr; align-items:start;">
+      <div>
+        <h2>🛒 Cart</h2>
+        <div id="cart-list" class="card mt-2" style="padding:18px 20px;"></div>
+
+        <h2 class="mt-3">📋 Your Details</h2>
+        <div class="card mt-2">
+          <label>Your Name *</label>
+          <input id="cust-name" placeholder="e.g. Priya Sharma">
+          <label>Phone Number *</label>
+          <input id="cust-phone" placeholder="e.g. 9876543210" inputmode="numeric">
+          <label>Delivery Type</label>
+          <select id="cust-delivery">
+            <option value="Pickup">Pickup from store</option>
+            <option value="Delivery">Home Delivery</option>
+          </select>
+          <div id="addr-field" class="hidden">
+            <label>Delivery Address</label>
+            <textarea id="cust-address" rows="2" placeholder="House no, street, area, landmark"></textarea>
+          </div>
+          <label>Notes (optional)</label>
+          <input id="cust-notes" placeholder="e.g. No nuts, write Happy Birthday on the box">
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>🧾 Bill Summary</h2>
+        <div class="summary mt-2" id="summary"></div>
+
+        <h3 class="mt-3 mb-1">💳 Payment Method</h3>
+        <label class="pay-option">
+          <input type="radio" name="pay" value="PhonePe" checked>
+          <span><span class="pay-title">PhonePe / UPI</span><br><span class="muted" style="font-size:.85rem;" id="phonepe-hint"></span></span>
+        </label>
+        <label class="pay-option">
+          <input type="radio" name="pay" value="COD">
+          <span><span class="pay-title">Pay on Pickup / Cash on Delivery</span><br><span class="muted" style="font-size:.85rem;">Pay when you receive</span></span>
+        </label>
+
+        <button id="place-order" class="btn btn-green btn-block mt-3" onclick="startCheckout()">Place Order →</button>
+        <button class="btn btn-wa btn-block mt-1" onclick="orderViaWhatsApp()">💬 Order via WhatsApp Chat</button>
+        <p class="muted mt-2" style="font-size:.85rem;">Ordering by WhatsApp opens a chat with all your items — just press send.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PhonePe payment modal -->
+<div id="pay-modal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;">
+  <div class="card pay-screen" style="max-width:420px;width:100%;">
+    <div class="big">💳</div>
+    <h2>Pay via PhonePe</h2>
+    <p class="muted">Scan the QR or tap Pay with PhonePe. <b id="phonepe-modal-hint"></b></p>
+    <div class="pay-amount" id="pay-amount"></div>
+    <div class="qr-box" id="qr-box"><img id="pay-qr" alt="UPI QR" style="width:100%;height:100%;object-fit:contain;border-radius:8px;"><span id="qr-note" style="position:absolute;">📱 Scanning QR…</span></div>
+    <a id="pay-btn" class="btn btn-block" href="#">Pay with PhonePe</a>
+    <p class="muted mt-2" style="font-size:.8rem;">Scan the QR with any UPI app (PhonePe, GPay, Paytm) or tap Pay with PhonePe. Then press "I've Paid".</p>
+    <button class="btn btn-dark btn-block mt-2" onclick="confirmAfterPayment()">✅ I've Paid — Confirm Order</button>
+    <button class="btn btn-outline btn-block mt-1" style="border-color:var(--line);color:var(--muted);" onclick="document.getElementById('pay-modal').classList.add('hidden')">Cancel</button>
+  </div>
+</div>
+
+<!-- Order placed modal -->
+<div id="done-modal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;">
+  <div class="card pay-screen" style="max-width:440px;width:100%;">
+    <div class="big">🎉</div>
+    <h2>Order Placed!</h2>
+    <p class="muted">Your order ID is</p>
+    <div class="pay-amount" id="done-id"></div>
+    <p class="mt-2">We've sent your order on WhatsApp. Track it anytime.</p>
+    <a class="btn btn-wa btn-block" id="done-wa" href="#" target="_blank">Open WhatsApp</a>
+    <div class="flex mt-2" style="justify-content:center;">
+      <a class="btn btn-dark" href="track.html">Track Order</a>
+      <a class="btn btn-outline" style="border:2px solid var(--line);color:var(--brown);" href="home.html">Back Home</a>
+    </div>
+  </div>
+</div>
+
+<footer id="site-footer"></footer>
+
+<script src="js/config.js"></script>
+<script src="js/data.js"></script>
+<script src="js/store.js"></script>
+<script src="js/qrcode.min.js"></script>
+<script>
+let pendingOrder = null;
+
+function renderCart() {
+  const cart = Store.getCart();
+  const box = document.getElementById('cart-list');
+  if (!cart.length) {
+    box.innerHTML = `<p class="muted">Your cart is empty. <a href="menu.html" style="font-weight:700;color:var(--accent-dark);">Browse the menu →</a></p>`;
+    document.getElementById('summary').innerHTML = '<div class="line"><span>Total</span><b>₹0</b></div>';
+    document.getElementById('place-order').disabled = true;
+    return;
+  }
+  document.getElementById('place-order').disabled = false;
+  box.innerHTML = cart.map(i => `
+    <div class="cart-item">
+      <div>
+        <div class="name">${i.name}</div>
+        <div class="sub">${Store.money(i.price)} / ${i.unit}</div>
+      </div>
+      <div class="flex">
+        <div class="qty">
+          <button onclick="changeQty('${i.id}', -1)">−</button>
+          <span>${i.qty}</span>
+          <button onclick="changeQty('${i.id}', 1)">+</button>
+        </div>
+        <b style="min-width:72px;text-align:right;">${Store.money(i.qty * i.price)}</b>
+      </div>
+    </div>`).join('');
+  renderSummary();
+}
+
+function renderSummary() {
+  const subtotal = Store.cartTotal();
+  const isDel = document.getElementById('cust-delivery').value === 'Delivery';
+  let delivery = 0;
+  if (isDel && subtotal < STORE.freeDeliveryAbove) delivery = STORE.deliveryFee;
+  const total = subtotal + delivery;
+  document.getElementById('summary').innerHTML = `
+    <div class="line"><span>Items (${Store.cartCount()})</span><span>${Store.money(subtotal)}</span></div>
+    <div class="line"><span>Packing</span><span>Free</span></div>
+    ${isDel ? `<div class="line"><span>Delivery${delivery === 0 ? ' (Free!)' : ''}</span><span>${delivery === 0 ? 'FREE' : Store.money(delivery)}</span></div>` : ''}
+    <div class="line total"><span>Total</span><span>${Store.money(total)}</span></div>`;
+  return { subtotal, delivery, total };
+}
+
+function changeQty(id, d) {
+  const item = Store.getCart().find(i => i.id === id);
+  Store.updateQty(id, item.qty + d);
+  renderCart();
+  const b = document.getElementById('cart-badge');
+  if (b) b.textContent = Store.cartCount();
+}
+
+function readCustomer() {
+  const name = document.getElementById('cust-name').value.trim();
+  const phone = document.getElementById('cust-phone').value.trim();
+  const delivery = document.getElementById('cust-delivery').value;
+  const address = document.getElementById('cust-address').value.trim();
+  const notes = document.getElementById('cust-notes').value.trim();
+  if (!name) { Store.toast('Please enter your name', 'error'); return null; }
+  if (!/^\d{10}$/.test(phone)) { Store.toast('Please enter a valid 10-digit phone number', 'error'); return null; }
+  if (delivery === 'Delivery' && !address) { Store.toast('Please enter your delivery address', 'error'); return null; }
+  return { name, phone, delivery, address, notes };
+}
+
+function buildOrder() {
+  const c = readCustomer();
+  if (!c) return null;
+  const cart = Store.getCart();
+  const subtotal = Store.cartTotal();
+  const isDel = c.delivery === 'Delivery';
+  const delivery = isDel && subtotal < STORE.freeDeliveryAbove ? STORE.deliveryFee : 0;
+  const order = {
+    id: Store.nextOrderId(),
+    name: c.name,
+    phone: c.phone,
+    delivery: c.delivery,
+    address: isDel ? c.address : 'Pickup at store',
+    notes: c.notes || '',
+    items: cart,
+    subtotal: subtotal,
+    deliveryFee: isDel ? delivery : 0,
+    total: subtotal + delivery,
+    payment: 'Pay on Pickup / COD',
+    paymentStatus: 'Unpaid',
+    status: 'Placed',
+    createdAt: new Date().toISOString(),
+    history: [{ status: 'Placed', at: new Date().toISOString() }],
+  };
+  return order;
+}
+
+function orderMessage(order) {
+  const items = order.items.map(i => `• ${i.qty} × ${i.name} — ${Store.money(i.qty * i.price)}`).join('\n');
+  return [
+    `🛒 *NEW ORDER ${order.id}*`,
+    ``,
+    `👤 Name: ${order.name}`,
+    `📞 Phone: ${order.phone}`,
+    `📦 Delivery: ${order.delivery}`,
+    `📍 Address: ${order.address}`,
+    order.notes ? `📝 Notes: ${order.notes}` : ``,
+    ``,
+    `📋 *Items:*`,
+    items,
+    ``,
+    `🧾 Subtotal: ${Store.money(order.subtotal)}`,
+    order.deliveryFee > 0 ? `🚚 Delivery: ${Store.money(order.deliveryFee)}` : (order.delivery === 'Delivery' ? `🚚 Delivery: FREE` : ``),
+    `💰 *Total: ${Store.money(order.total)}*`,
+    `💳 Payment: ${order.payment}`,
+    ``,
+    `Order placed at ${Store.fmtTime(order.createdAt)}`,
+  ].filter(l => l !== '').join('\n');
+}
+
+function placeOrder(order, paymentLabel) {
+  order.payment = paymentLabel;
+  if (paymentLabel.indexOf('PhonePe') === 0) order.paymentStatus = 'Paid';
+  Store.saveOrder(order);
+  Store.clearCart();
+  renderCart();
+  return order;
+}
+
+function showDone(order) {
+  document.getElementById('pay-modal').classList.add('hidden');
+  document.getElementById('done-id').textContent = order.id;
+  document.getElementById('done-wa').href = Store.waLink(`Order ${order.id} placed ✅ Total ${Store.money(order.total)} — Track status at ${location.origin}${location.pathname.replace('order.html','track.html')}?id=${order.id}`);
+  document.getElementById('done-modal').classList.remove('hidden');
+  const b = document.getElementById('cart-badge');
+  if (b) b.textContent = Store.cartCount();
+}
+
+function startCheckout() {
+  const order = buildOrder();
+  if (!order) return;
+  pendingOrder = order;
+  const pay = document.querySelector('input[name="pay"]:checked').value;
+  if (pay === 'PhonePe') {
+    document.getElementById('pay-amount').textContent = Store.money(order.total);
+    const upi = Store.upiLink(order.total, `Order ${order.id}`);
+    const btn = document.getElementById('pay-btn');
+    btn.href = upi;
+    btn.onclick = () => { location.href = upi; return false; };
+    const qr = qrcode(0, 'L');
+    qrcode.stringToBytes = qrcode.stringToBytesFuncs['UTF-8'];
+    qr.addData(upi);
+    qr.make();
+    const img = document.getElementById('pay-qr');
+    img.src = qr.createDataURL(4, 8);
+    img.onload = () => { document.getElementById('qr-note').style.display = 'none'; };
+    document.getElementById('pay-modal').classList.remove('hidden');
+  } else {
+    const finalOrder = placeOrder(order, 'Pay on Pickup / COD');
+    const msg = orderMessage(finalOrder);
+    Store.toast('Order placed! Sending WhatsApp confirmation…');
+    showDone(finalOrder);
+    window.open(Store.waLink(msg), '_blank');
+  }
+}
+
+function confirmAfterPayment() {
+  if (!pendingOrder) return;
+  const finalOrder = placeOrder(pendingOrder, 'PhonePe (UPI) to ' + STORE.phonepeDisplay);
+  const msg = orderMessage(finalOrder);
+  Store.toast('Payment received — order confirmed!');
+  showDone(finalOrder);
+  window.open(Store.waLink(msg), '_blank');
+}
+
+function orderViaWhatsApp() {
+  const order = buildOrder();
+  if (!order) return;
+  window.open(Store.waLink(orderMessage(order)), '_blank');
+  Store.toast('WhatsApp opened with your order 📲');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('phonepe-hint').textContent = `Pay now to ${STORE.phonepeDisplay} (PhonePe)`;
+  document.getElementById('phonepe-modal-hint').textContent = `${STORE.phonepeDisplay} (${STORE.upiId})`;
+  renderCart();
+  const sel = document.getElementById('cust-delivery');
+  const addr = document.getElementById('addr-field');
+  sel.addEventListener('change', () => { addr.classList.toggle('hidden', sel.value !== 'Delivery'); renderSummary(); });
+});
+</script>
+</body>
+</html>

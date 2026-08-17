@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FreshBakes — Local Bakery & Cafe | Order Online</title>
+<meta name="description" content="Order fresh cakes, breads, pastries & more online from FreshBakes. Pay via PhonePe and confirm on WhatsApp.">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="Home">
+
+<header id="site-header"></header>
+
+<!-- WhatsApp float button -->
+<a href="https://wa.me/919618861300" target="_blank" title="Chat on WhatsApp" style="position:fixed;right:18px;bottom:18px;background:#25d366;color:#fff;width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 6px 18px rgba(0,0,0,.25);z-index:90;">💬</a>
+
+<section class="hero">
+  <div class="container">
+    <h1>Freshly Baked, Delivered with ❤️</h1>
+    <p>Your neighbourhood bakery now online — order cakes, breads, pastries & snacks, pay with PhonePe, and confirm instantly on WhatsApp.</p>
+    <div class="flex" style="justify-content:center;">
+      <a href="menu.html" class="btn">Browse Menu</a>
+      <a href="cakes.html" class="btn btn-outline">Custom Cakes</a>
+      <a href="https://wa.me/919618861300" target="_blank" class="btn btn-wa">WhatsApp Us</a>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <h2 class="centered">Why Order From Us?</h2>
+    <p class="sub centered">Simple ordering that works with how you already chat and pay.</p>
+    <div class="grid grid-4">
+      <div class="card feature"><div class="emoji">🛒</div><h3>Easy Ordering</h3><p class="desc">Browse the menu, add to cart, and check out in under a minute.</p></div>
+      <div class="card feature"><div class="emoji">💬</div><h3>WhatsApp Confirm</h3><p class="desc">Your order is confirmed on WhatsApp instantly — no app needed.</p></div>
+      <div class="card feature"><div class="emoji">💳</div><h3>PhonePe Pay</h3><p class="desc">Pay securely via PhonePe (UPI) to <b>9618861300</b> or pay on pickup.</p></div>
+      <div class="card feature"><div class="emoji">📍</div><h3>Track Your Order</h3><p class="desc">Live status: Placed → Accepted → Preparing → Ready → Delivered.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0;">
+  <div class="container">
+    <h2 class="centered">Customer Favourites</h2>
+    <p class="sub centered">Handpicked bestsellers our regulars love.</p>
+    <div class="grid grid-3" id="featured"></div>
+    <p class="centered mt-3"><a href="menu.html" class="btn btn-dark">See Full Menu</a></p>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0;">
+  <div class="container">
+    <div class="card" style="background:linear-gradient(135deg,#fff8ee,#ffe9c2);">
+      <div class="flex between" style="align-items:center;">
+        <div>
+          <h2 style="margin:0;">🎂 Birthday coming up?</h2>
+          <p class="mt-1" style="margin:0;">Order a custom cake — pick flavour, weight & write your own message.</p>
+        </div>
+        <a href="cakes.html" class="btn">Order Custom Cake</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="banner-offer">
+  <div class="container">🎉 Monsoon Madness — 10% OFF on all Cakes. Use code <b>RAIN10</b> on WhatsApp. Today only!</div>
+</section>
+
+<footer id="site-footer"></footer>
+
+<script src="js/config.js"></script>
+<script src="js/data.js"></script>
+<script src="js/store.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const favIds = ['c1', 'c4', 'p1', 'b2', 's1', 'd1'];
+  const items = favIds.map(id => PRODUCTS.find(p => p.id === id)).filter(Boolean);
+  document.getElementById('featured').innerHTML = items.map(p => `
+    <div class="card card-hover" style="padding:14px;">
+      <div class="p-img">
+        <img src="${p.img}" alt="${p.name}" loading="lazy" onerror="this.style.display='none'">
+        <div class="p-img-fallback">${p.emoji}</div>
+      </div>
+      <h3>${p.name}</h3>
+      <div class="price">${Store.money(p.price)} <span class="muted" style="font-weight:400;font-size:.8rem;">/ ${p.unit}</span></div>
+      <p class="desc">${p.desc}</p>
+      <div class="row">
+        <span class="chip">${p.category}</span>
+        <button class="btn btn-dark" style="padding:8px 16px;font-size:.9rem;" onclick="Store.addToCart(PRODUCTS.find(x=>x.id==='${p.id}')) ; Store.toast('Added to cart'); updateBadge()">Add</button>
+      </div>
+    </div>`).join('');
+});
+function updateBadge() {
+  const b = document.getElementById('cart-badge');
+  if (b) b.textContent = Store.cartCount();
+}
+</script>
+</body>
+</html>
