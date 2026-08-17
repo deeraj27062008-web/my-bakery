@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Custom Cakes — FreshBakes Bakery</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="Custom Cakes">
+
+<header id="site-header"></header>
+
+<section class="hero-sm">
+  <div class="container"><h1>🎂 Custom Cakes</h1><p>Made-to-order cakes with your name, message & favourite flavour.</p></div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="grid" style="grid-template-columns: 1.3fr 1fr; align-items:start;">
+      <div class="card">
+        <h2>Design Your Cake</h2>
+        <label>Flavour *</label>
+        <select id="cake-flavour">${CAKE_OPTIONS.flavours.map(f => `<option>${f}</option>`).join('')}</select>
+
+        <label>Weight *</label>
+        <select id="cake-weight">${CAKE_OPTIONS.weights.map(w => `<option>${w}</option>`).join('')}</select>
+
+        <label>Occasion</label>
+        <select id="cake-occasion">${CAKE_OPTIONS.occasions.map(o => `<option>${o}</option>`).join('')}</select>
+
+        <label>Need By Date *</label>
+        <input id="cake-date" type="date">
+
+        <label>Message on Cake (max 25 letters)</label>
+        <input id="cake-message" maxlength="25" placeholder="e.g. Happy Birthday Arjun">
+
+        <label>Theme / Reference (optional)</label>
+        <input id="cake-theme" placeholder="e.g. Barbie theme, chocolate drip, photos">
+
+        <label>Your Name *</label>
+        <input id="cake-name" placeholder="Your name">
+        <label>Your Phone *</label>
+        <input id="cake-phone" placeholder="10-digit mobile" inputmode="numeric">
+
+        <div class="flex mt-3">
+          <button class="btn btn-green" onclick="submitCake()">Send Cake Order on WhatsApp</button>
+          <button class="btn btn-wa" onclick="openCakeChat()">💬 Chat About My Cake</button>
+        </div>
+        <p class="muted mt-2" style="font-size:.85rem;">We'll confirm price & availability on WhatsApp within minutes. 💬 <span id="cake-wa"></span></p>
+      </div>
+
+      <div>
+        <div class="card">
+          <h3>💰 Cake Price Guide</h3>
+          <div class="summary mt-2">
+            <div class="line"><span>250g</span><span>₹350 – 500</span></div>
+            <div class="line"><span>500g</span><span>₹450 – 700</span></div>
+            <div class="line"><span>1kg</span><span>₹800 – 1,300</span></div>
+            <div class="line"><span>2kg</span><span>₹1,500 – 2,400</span></div>
+            <div class="line"><span>3kg+</span><span>By quote</span></div>
+            <div class="line muted" style="font-size:.8rem;border:none;">Final price depends on flavour, design & theme.</div>
+          </div>
+        </div>
+        <div class="card mt-2">
+          <h3>🖼️ Popular Designs</h3>
+          <p class="desc mt-1">• Photo cakes 📷</p>
+          <p class="desc">• Drip & ombre cakes 🍫</p>
+          <p class="desc">• Cartoon / theme cakes 🧸</p>
+          <p class="desc">• Designer fondant cakes 👑</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer id="site-footer"></footer>
+
+<script src="js/config.js"></script>
+<script src="js/data.js"></script>
+<script src="js/store.js"></script>
+<script>
+function cakeData() {
+  const flavour = document.getElementById('cake-flavour').value;
+  const weight = document.getElementById('cake-weight').value;
+  const occasion = document.getElementById('cake-occasion').value;
+  const date = document.getElementById('cake-date').value;
+  const message = document.getElementById('cake-message').value.trim();
+  const theme = document.getElementById('cake-theme').value.trim();
+  const name = document.getElementById('cake-name').value.trim();
+  const phone = document.getElementById('cake-phone').value.trim();
+  if (!date) { Store.toast('Please choose a "Need By" date', 'error'); return null; }
+  if (!name) { Store.toast('Please enter your name', 'error'); return null; }
+  if (!/^\d{10}$/.test(phone)) { Store.toast('Please enter a valid 10-digit phone number', 'error'); return null; }
+  return { flavour, weight, occasion, date, message, theme, name, phone };
+}
+
+function cakeMessage(c) {
+  return [
+    `🎂 *CUSTOM CAKE REQUEST*`,
+    ``,
+    `Flavour: ${c.flavour}`,
+    `Weight: ${c.weight}`,
+    `Occasion: ${c.occasion}`,
+    `Need by: ${c.date}`,
+    c.message ? `Message on cake: "${c.message}"` : ``,
+    c.theme ? `Theme: ${c.theme}` : ``,
+    ``,
+    `👤 Name: ${c.name}`,
+    `📞 Phone: ${c.phone}`,
+  ].filter(l => l !== '').join('\n');
+}
+
+function submitCake() {
+  const c = cakeData();
+  if (!c) return;
+  const order = {
+    id: Store.nextOrderId(),
+    name: c.name,
+    phone: c.phone,
+    delivery: 'Custom Cake',
+    address: '',
+    notes: `Custom Cake — ${c.flavour} ${c.weight}, ${c.occasion}, by ${c.date}${c.message ? ', msg: "' + c.message + '"' : ''}${c.theme ? ', theme: ' + c.theme : ''}`,
+    items: [{ id: 'custom', name: `Custom ${c.flavour} Cake (${c.weight})`, price: 0, unit: '', qty: 1 }],
+    total: 0,
+    payment: 'To be quoted',
+    paymentStatus: 'Unpaid',
+    status: 'Placed',
+    createdAt: new Date().toISOString(),
+    history: [{ status: 'Placed', at: new Date().toISOString() }],
+  };
+  Store.saveOrder(order);
+  Store.toast('Request sent to WhatsApp!');
+  window.open(Store.waLink(cakeMessage(c)), '_blank');
+}
+
+function openCakeChat() {
+  const c = cakeData();
+  if (!c) return;
+  window.open(Store.waLink(`Hi! I'd like a ${c.flavour} cake (${c.weight}) for ${c.occasion} on ${c.date}. Please share the price.`), '_blank');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('cake-wa').textContent = STORE.whatsappDisplay;
+});
+</script>
+</body>
+</html>
