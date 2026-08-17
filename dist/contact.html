@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact Us — FreshBakes Bakery</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="Contact">
+
+<header id="site-header"></header>
+
+<section class="hero-sm">
+  <div class="container"><h1>📞 Contact Us</h1><p>We'd love to hear from you.</p></div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="grid grid-2">
+      <div>
+        <div class="card">
+          <h2>Get in Touch</h2>
+          <div class="mt-2">
+            <p>📍 <b>Address:</b><br><span id="c-address"></span></p>
+            <p class="mt-2">🕐 <b>Hours:</b><br><span id="c-hours"></span></p>
+            <p class="mt-2">📞 <b>Call:</b><br><a id="c-tel" href="#">--</a></p>
+            <p class="mt-2">💬 <b>WhatsApp:</b><br><a href="https://wa.me/919618861300" target="_blank" id="c-wa"></a></p>
+            <p class="mt-2">💳 <b>PhonePe:</b><br><span id="c-phonepe"></span></p>
+          </div>
+        </div>
+
+        <div class="card mt-2">
+          <h3>💬 WhatsApp Enquiry</h3>
+          <p class="muted">Quickest way to reach us — tap the button below.</p>
+          <a class="btn btn-wa" href="https://wa.me/919618861300" target="_blank">Chat on WhatsApp</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Send a Message</h2>
+        <label>Your Name *</label>
+        <input id="msg-name" placeholder="Your name">
+        <label>Your Phone *</label>
+        <input id="msg-phone" placeholder="10-digit mobile" inputmode="numeric">
+        <label>Message *</label>
+        <textarea id="msg-text" rows="4" placeholder="How can we help?"></textarea>
+        <button class="btn btn-green btn-block mt-2" onclick="sendMsg()">Send via WhatsApp</button>
+        <p class="muted mt-1" style="font-size:.8rem;">Your message opens in WhatsApp and goes straight to our shop. 💬</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer id="site-footer"></footer>
+
+<script src="js/config.js"></script>
+<script src="js/data.js"></script>
+<script src="js/store.js"></script>
+<script>
+function sendMsg() {
+  const name = document.getElementById('msg-name').value.trim();
+  const phone = document.getElementById('msg-phone').value.trim();
+  const text = document.getElementById('msg-text').value.trim();
+  if (!name) { Store.toast('Enter your name', 'error'); return; }
+  if (!/^\d{10}$/.test(phone)) { Store.toast('Enter a valid phone number', 'error'); return; }
+  if (!text) { Store.toast('Enter a message', 'error'); return; }
+  const msg = `Hi ${STORE.name}! 👋\n\nName: ${name}\nPhone: ${phone}\n\n${text}`;
+  window.open(Store.waLink(msg), '_blank');
+  Store.toast('Opening WhatsApp…');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('c-address').textContent = STORE.address;
+  document.getElementById('c-hours').textContent = STORE.hours;
+  document.getElementById('c-tel').href = 'tel:+91' + STORE.phone;
+  document.getElementById('c-tel').textContent = STORE.phone;
+  document.getElementById('c-wa').textContent = STORE.whatsappDisplay;
+  document.getElementById('c-phonepe').textContent = STORE.phonepeDisplay + ' (' + STORE.upiId + ')';
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Offers — FreshBakes Bakery</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="Offers">
+
+<header id="site-header"></header>
+
+<section class="hero-sm">
+  <div class="container"><h1>🏷️ Offers & Deals</h1><p>Grab your favourite treats for less.</p></div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="grid grid-2" id="offers"></div>
+    <div class="card mt-3" style="text-align:center;">
+      <h2>💬 Order on WhatsApp</h2>
+      <p class="muted mt-1">Mention the offer code when you order and we'll apply the discount.</p>
+      <a class="btn btn-wa mt-2" href="https://wa.me/919618861300" target="_blank">Chat Now</a>
+    </div>
+  </div>
+</section>
+
+<footer id="site-footer"></footer>
+
+<script src="js/config.js"></script>
+<script src="js/data.js"></script>
+<script src="js/store.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('offers').innerHTML = OFFERS.map(o => `
+    <div class="card">
+      <div class="flex between">
+        <span class="chip tag-offer">CODE: ${o.code}</span>
+        <span class="muted" style="font-size:.8rem;">${o.until}</span>
+      </div>
+      <h3 class="mt-1">${o.title}</h3>
+      <p class="desc">${o.detail}</p>
+      <button class="btn btn-dark" style="padding:8px 18px;font-size:.9rem;" onclick="copyCode('${o.code}')">Copy Code</button>
+    </div>`).join('');
+});
+function copyCode(code) {
+  navigator.clipboard && navigator.clipboard.writeText(code);
+  Store.toast(`Code ${code} copied!`);
+}
+</script>
+</body>
+</html>

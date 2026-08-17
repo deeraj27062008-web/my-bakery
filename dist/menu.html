@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Menu — FreshBakes Bakery</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="Menu">
+
+<header id="site-header"></header>
+
+<section class="hero-sm">
+  <div class="container">
+    <h1>Our Menu</h1>
+    <p>Freshly baked every morning. Tap "Add" to build your order.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="flex mb-3" id="cat-filters"></div>
+    <div id="menu-grid" class="grid grid-3"></div>
+  </div>
+</section>
+
+<footer id="site-footer"></footer>
+
+<script src="js/config.js"></script>
+<script src="js/data.js"></script>
+<script src="js/store.js"></script>
+<script>
+const CATS = ['All', ...new Set(PRODUCTS.map(p => p.category))];
+let activeCat = 'All';
+
+function renderFilters() {
+  document.getElementById('cat-filters').innerHTML = CATS.map(c =>
+    `<button class="btn btn-dark" data-cat="${c}" style="padding:8px 18px;font-size:.9rem;">${c}</button>`
+  ).join('');
+  document.querySelectorAll('#cat-filters button').forEach(b => {
+    b.addEventListener('click', () => { activeCat = b.dataset.cat; renderGrid(); });
+  });
+}
+
+function renderGrid() {
+  const list = PRODUCTS.filter(p => activeCat === 'All' || p.category === activeCat);
+  document.getElementById('menu-grid').innerHTML = list.map(p => `
+    <div class="card card-hover" style="padding:14px;">
+      <div class="p-img">
+        <img src="${p.img}" alt="${p.name}" loading="lazy" onerror="this.style.display='none'">
+        <div class="p-img-fallback">${p.emoji}</div>
+      </div>
+      <h3>${p.name}</h3>
+      <div class="price">${Store.money(p.price)} <span class="muted" style="font-weight:400;font-size:.8rem;">/ ${p.unit}</span></div>
+      <p class="desc">${p.desc}</p>
+      <div class="row">
+        <span class="chip">${p.category}</span>
+        <button class="btn btn-dark" style="padding:8px 16px;font-size:.9rem;" onclick="addOne('${p.id}')">Add to Cart</button>
+      </div>
+    </div>`).join('');
+}
+
+function addOne(id) {
+  const p = PRODUCTS.find(x => x.id === id);
+  Store.addToCart(p, 1);
+  Store.toast(`${p.name} added 🛒`);
+  const b = document.getElementById('cart-badge');
+  if (b) b.textContent = Store.cartCount();
+}
+
+document.addEventListener('DOMContentLoaded', () => { renderFilters(); renderGrid(); });
+</script>
+</body>
+</html>
