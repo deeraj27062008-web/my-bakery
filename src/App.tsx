@@ -177,19 +177,6 @@ function ProductCard({ p, qty, onAdd, onRemove, index }: {
   const tilt = useTilt()
   const ripple = useRipple()
   const [justAdded, setJustAdded] = useState(false)
-  const [visible, setVisible] = useState(false)
-  const cardRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const el = cardRef.current
-    if (!el) return
-    const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect() } },
-      { threshold: 0.1 }
-    )
-    obs.observe(el)
-    return () => obs.disconnect()
-  }, [])
 
   const handleAdd = () => {
     onAdd()
@@ -198,12 +185,7 @@ function ProductCard({ p, qty, onAdd, onRemove, index }: {
   }
 
   return (
-    <div ref={cardRef} className="card-3d w-full"
-      style={{
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(30px)',
-        transition: `opacity 0.6s cubic-bezier(0.16,1,0.3,1) ${index * 0.08}s, transform 0.6s cubic-bezier(0.16,1,0.3,1) ${index * 0.08}s`,
-      }}>
+    <div className="card-3d w-full">
       <div
         ref={tilt.ref}
         className="card-3d-inner rounded-2xl overflow-hidden group cursor-pointer w-full"
